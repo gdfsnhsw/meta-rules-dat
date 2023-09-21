@@ -176,6 +176,7 @@ jobs:
           curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/Bahamut/Bahamut.yaml | ${{ env.SED }} > ./data-lite/bahamut
           curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/Speedtest/Speedtest.yaml | ${{ env.SED }} > ./data-lite/speedtest
           curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/PayPal/PayPal.yaml | ${{ env.SED }} > ./data-lite/paypal
+          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/PrivateTracker/PrivateTracker.yaml | ${{ env.SED }} > ./data-lite/privatetracker
           
           curl -sSL https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/China/China_Domain.yaml | grep - | sed "s/  - '+.//g" | sed "s/  - '/full:/g" | grep -v "#" | grep -v "acg.rip" | sed "s/'//g" > ./data-lite/cn
           curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/Cloudflare/Cloudflare.yaml | ${{ env.SED }} > ./data-lite/cloudflare
