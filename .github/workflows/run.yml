@@ -31,7 +31,7 @@ jobs:
       - name: Checkout the "hidden" branch of Loyalsoldier/v2ray-rules-dat
         uses: actions/checkout@v3
         with:
-          repository: 'Loyalsoldier/v2ray-rules-dat'
+          repository: Loyalsoldier/v2ray-rules-dat
           ref: hidden
 
       - name: Checkout Loyalsoldier/domain-list-custom
