@@ -12,11 +12,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: 'stable'
-
       - name: Set variables
         run: |
           echo "GOAMD64=v3" >> $GITHUB_ENV
@@ -36,7 +31,7 @@ jobs:
       - name: Checkout the "hidden" branch of Loyalsoldier/v2ray-rules-dat
         uses: actions/checkout@v3
         with:
-          repository: 'Loyalsoldier/v2ray-rules-dat'
+          repository: Loyalsoldier/v2ray-rules-dat
           ref: hidden
 
       - name: Checkout Loyalsoldier/domain-list-custom
@@ -56,6 +51,17 @@ jobs:
         with:
           repository: cokebar/gfwlist2dnsmasq
           path: gfwlist2dnsmasq
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: ./custom/go.mod
+          cache-dependency-path: ./custom/go.sum
+
+      - name: Get geoip.dat relative files
+        run: |
+          wget https://github.com/Loyalsoldier/geoip/raw/release/geoip.dat
+          wget https://github.com/Loyalsoldier/geoip/raw/release/geoip.dat.sha256sum
 
       - name: Generate GFWList domains
         run: |
@@ -150,6 +156,8 @@ jobs:
           curl -sSL https://raw.githubusercontent.com/xishang0128/rules/main/sharepoint.list > ./community/data/sharepoint
           curl -sSL https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/PrivateTracker/PrivateTracker.list | ${{ env.SED }} > ./community/data/tracker
           curl -sSL https://gitea.com/XIU2/TrackersListCollection/raw/branch/master/all.txt | grep -i "\.[A-Z]" | grep -v tracker | sed 's/^.*\/\///g' | sed 's/:.*\/.*//g' >> ./community/data/tracker
+          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/BlockHttpDNS/BlockHttpDNS.list | ${{ env.SED }} > ./community/data/httpdns
+          
 
       - name: Build geosite.dat file
         run: |
@@ -177,7 +185,8 @@ jobs:
           curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/Speedtest/Speedtest.yaml | ${{ env.SED }} > ./data-lite/speedtest
           curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/PayPal/PayPal.yaml | ${{ env.SED }} > ./data-lite/paypal
           curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/PrivateTracker/PrivateTracker.yaml | ${{ env.SED }} > ./data-lite/privatetracker
-          
+
+
           curl -sSL https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/China/China_Domain.yaml | grep - | sed "s/  - '+.//g" | sed "s/  - '/full:/g" | grep -v "#" | grep -v "acg.rip" | sed "s/'//g" > ./data-lite/cn
           curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/Cloudflare/Cloudflare.yaml | ${{ env.SED }} > ./data-lite/cloudflare
           curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/Google/Google.yaml | ${{ env.SED }} > ./data-lite/google
@@ -235,6 +244,19 @@ jobs:
           curl -sSL https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Proxy/Proxy_Domain.yaml | sed '/^\s*#/d' > ./publish/proxy.yaml
           curl -sSL https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaMax/ChinaMax_Classical.yaml | grep DOMAIN | grep -v "#" | sed 's/  - DOMAIN,/full:/g' | sed 's/  - DOMAIN-SUFFIX,//g' | sed 's/  - DOMAIN-KEYWORD,/keyword:/g' > ./publish/cn.txt
           cd ./publish || exit 1
+          sha256sum geoip-lite.dat > geoip-lite.dat.sha256sum
+          sha256sum geoip.dat > geoip.dat.sha256sum
+          sha256sum geosite.dat > geosite.dat.sha256sum
+          sha256sum geosite-lite.dat > geosite-lite.dat.sha256sum
+          sha256sum geosite.db > geosite.db.sha256sum
+          sha256sum geosite-lite.db > geosite-lite.db.sha256sum
+          sha256sum geoip.db > geoip.db.sha256sum
+          sha256sum geoip-lite.db > geoip-lite.db.sha256sum
+          sha256sum geoip.metadb > geoip.metadb.sha256sum
+          sha256sum geoip-lite.metadb > geoip-lite.metadb.sha256sum
+
+          
+
 
       - name: Delete current release assets
         uses: andreaswilli/delete-release-assets-action@v3.0.0
@@ -250,17 +272,13 @@ jobs:
           EOF
 
       - name: Release and upload assets
-        uses: softprops/action-gh-release@v1
+        uses: svenstaro/upload-release-action@v2
         with:
-          name: latest
-          tag_name: latest
-          draft: false
-          prerelease: false
-          body_path: release.txt
-          files: |
-            ./publish/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+          repo_token: ${{ secrets.MY_GITHUB_TOKEN }}
+          release_name: ${{ env.RELEASE_NAME }}
+          tag: latest
+          file_glob: true
+          file: ./publish/*
 
       - name: Git push assets to "release" branch
         run: |
